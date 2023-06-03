@@ -10,7 +10,7 @@ local Packages = ReplicatedStorage.Packages
 local Fusion = require(Packages.fusion)
 local New, Children, OnEvent, Value, Spring, Computed, Tween =
 	Fusion.New, Fusion.Children, Fusion.OnEvent, Fusion.Value, Fusion.Spring, Fusion.Computed, Fusion.Tween
-
+local Out = Fusion.Out
 --[[
     Date: 02/11/2023
     Time: 10:59:53
@@ -22,28 +22,10 @@ local New, Children, OnEvent, Value, Spring, Computed, Tween =
 local Camera = game.Workspace.CurrentCamera
 
 local DeviceFinder = require(ReplicatedStorage.Common.DeviceFinder)
-function GetScreenSize(fullscreen: boolean?): Vector2
-	if game:GetService("RunService"):IsStudio() then
-		warn("Call of GetScreenSize() inside studio returns the viewport dimensions, not the actual screen dimensions!")
-	end
-	if fullscreen then
-		local GameSettings = UserSettings().GameSettings
-		if not GameSettings:InFullScreen() then
-			GameSettings.FullscreenChanged:Wait()
-		end
-	end
-	local UI = Instance.new("ScreenGui")
-	UI.ScreenInsets = Enum.ScreenInsets.None
-	UI.Parent = game.Players.LocalPlayer.PlayerGui
-	local size = UI.AbsoluteSize
-	UI:Destroy()
-	return size * 3
-end
 
 local DeviceValue = Value(DeviceFinder.getDevice())
 local new = Value(`Viewport Size: {Camera.ViewportSize.X}, {Camera.ViewportSize.Y}`)
-local ScreenSize = GetScreenSize()
-local anotherValue = Value(`Viewport Size 2: {ScreenSize.X}, {ScreenSize.Y}`)
+local TextBoxText = Value()
 local gyro = Value("NOT ENABLED")
 
 Gui = New("ScreenGui")({
@@ -69,11 +51,6 @@ Gui = New("ScreenGui")({
 		}),
 		New("TextLabel")({
 			Size = UDim2.fromScale(0.13, 0.0463),
-			Text = anotherValue,
-			TextScaled = true,
-		}),
-		New("TextLabel")({
-			Size = UDim2.fromScale(0.13, 0.0463),
 			Text = DeviceValue,
 			TextScaled = true,
 		}),
@@ -82,6 +59,44 @@ Gui = New("ScreenGui")({
 			Text = gyro,
 			TextScaled = true,
 		}),
+		New("TextBox")({
+			Name = "TextLabel",
+			CursorPosition = -1,
+			FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json"),
+			PlaceholderText = "Test String Filter",
+			Text = "",
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			TextScaled = true,
+			TextSize = 14,
+			TextWrapped = true,
+			Active = false,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			BorderSizePixel = 0,
+			Selectable = false,
+			Size = UDim2.fromScale(0.13, 0.0463),
+			[Out("Text")] = TextBoxText,
+			[OnEvent("InputEnded")] = function()
+				-- warn(`Senting server {TextBoxText:get()}`)
+				local filterMessage = ReplicatedStorage.FilterText:InvokeServer(TextBoxText:get())
+				task.wait()
+				TextBoxText:set(filterMessage)
+				-- warn(`Output {filterMessage}`)
+			end,
+		}),
+		New("TextLabel")({
+			Name = "TextLabel",
+			FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json"),
+			Text = TextBoxText,
+			TextColor3 = Color3.fromRGB(0, 0, 0),
+			TextScaled = true,
+			TextSize = 14,
+			TextWrapped = true,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			BorderSizePixel = 0,
+			Size = UDim2.fromScale(0.13, 0.0463),
+		}),
 	},
 })
 
@@ -89,8 +104,6 @@ local gyroEnabled = UserInputService.GyroscopeEnabled
 
 task.spawn(function()
 	while true do
-		ScreenSize = GetScreenSize()
-		anotherValue:set(`Viewport Size 2: {ScreenSize.X}, {ScreenSize.Y}`)
 		new:set(`Viewport Size: {Camera.ViewportSize.X}, {Camera.ViewportSize.Y}`)
 		if gyroEnabled then
 			local _inputObj, cframe = UserInputService:GetDeviceRotation()
