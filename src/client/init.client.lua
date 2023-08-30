@@ -1,15 +1,15 @@
 repeat
 	task.wait()
 until game:IsLoaded()
-local ContentProvider = game:GetService("ContentProvider")
+-- local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local Packages = ReplicatedStorage.Packages
 local Fusion = require(Packages.fusion)
-local New, Children, OnEvent, Value, Spring, Computed, Tween =
-	Fusion.New, Fusion.Children, Fusion.OnEvent, Fusion.Value, Fusion.Spring, Fusion.Computed, Fusion.Tween
+local New, Children, OnEvent, Value=
+	Fusion.New, Fusion.Children, Fusion.OnEvent, Fusion.Value
 local Out = Fusion.Out
 --[[
     Date: 02/11/2023
@@ -28,7 +28,7 @@ local new = Value(`Viewport Size: {Camera.ViewportSize.X}, {Camera.ViewportSize.
 local TextBoxText = Value()
 local gyro = Value("NOT ENABLED")
 
-Gui = New("ScreenGui")({
+New("ScreenGui")({
 	Parent = player.PlayerGui,
 	IgnoreGuiInset = false,
 	[Children] = {
@@ -60,7 +60,7 @@ Gui = New("ScreenGui")({
 			TextScaled = true,
 		}),
 		New("TextBox")({
-			Name = "TextLabel",
+			Name = "TextBox",
 			CursorPosition = -1,
 			FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json"),
 			PlaceholderText = "Test String Filter",
@@ -79,7 +79,8 @@ Gui = New("ScreenGui")({
 			[OnEvent("InputEnded")] = function()
 				-- warn(`Senting server {TextBoxText:get()}`)
 				local filterMessage = ReplicatedStorage.FilterText:InvokeServer(TextBoxText:get())
-				task.wait()
+				
+				task.wait()	
 				TextBoxText:set(filterMessage)
 				-- warn(`Output {filterMessage}`)
 			end,
@@ -115,9 +116,9 @@ task.spawn(function()
 	end
 end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+UserInputService.InputBegan:Connect(function()
 	DeviceValue:set(DeviceFinder.getDevice())
 end)
-UserInputService.InputEnded:Connect(function(input, gameProcessedEvent)
+UserInputService.InputEnded:Connect(function()
 	DeviceValue:set(DeviceFinder.getDevice())
 end)
