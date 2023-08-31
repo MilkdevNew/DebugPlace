@@ -54,67 +54,9 @@ New("ScreenGui")({
 			Text = DeviceValue,
 			TextScaled = true,
 		}),
-		New("TextLabel")({
-			Size = UDim2.fromScale(0.13, 0.0463),
-			Text = gyro,
-			TextScaled = true,
-		}),
-		New("TextBox")({
-			Name = "TextBox",
-			CursorPosition = -1,
-			FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json"),
-			PlaceholderText = "Test String Filter",
-			Text = "",
-			TextColor3 = Color3.fromRGB(0, 0, 0),
-			TextScaled = true,
-			TextSize = 14,
-			TextWrapped = true,
-			Active = false,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			BorderColor3 = Color3.fromRGB(0, 0, 0),
-			BorderSizePixel = 0,
-			Selectable = false,
-			Size = UDim2.fromScale(0.13, 0.0463),
-			[Out("Text")] = TextBoxText,
-			[OnEvent("InputEnded")] = function()
-				-- warn(`Senting server {TextBoxText:get()}`)
-				local filterMessage = ReplicatedStorage.FilterText:InvokeServer(TextBoxText:get())
-				
-				task.wait()	
-				TextBoxText:set(filterMessage)
-				-- warn(`Output {filterMessage}`)
-			end,
-		}),
-		New("TextLabel")({
-			Name = "TextLabel",
-			FontFace = Font.new("rbxasset://fonts/families/SourceSansPro.json"),
-			Text = TextBoxText,
-			TextColor3 = Color3.fromRGB(0, 0, 0),
-			TextScaled = true,
-			TextSize = 14,
-			TextWrapped = true,
-			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-			BorderColor3 = Color3.fromRGB(0, 0, 0),
-			BorderSizePixel = 0,
-			Size = UDim2.fromScale(0.13, 0.0463),
-		}),
+
 	},
 })
-
-local gyroEnabled = UserInputService.GyroscopeEnabled
-
-task.spawn(function()
-	while true do
-		new:set(`Viewport Size: {Camera.ViewportSize.X}, {Camera.ViewportSize.Y}`)
-		if gyroEnabled then
-			local _inputObj, cframe = UserInputService:GetDeviceRotation()
-			gyro:set(cframe)
-		else
-			gyro:set("NOT ENABLED-g")
-		end
-		task.wait()
-	end
-end)
 
 UserInputService.InputBegan:Connect(function()
 	DeviceValue:set(DeviceFinder.getDevice())
