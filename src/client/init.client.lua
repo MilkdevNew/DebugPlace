@@ -10,7 +10,7 @@ local Packages = ReplicatedStorage.Packages
 local Fusion = require(Packages.fusion)
 local New, Children, OnEvent, Value=
 	Fusion.New, Fusion.Children, Fusion.OnEvent, Fusion.Value
-local Out = Fusion.Out
+local Computed = Fusion.Computed
 --[[
     Date: 02/11/2023
     Time: 10:59:53
@@ -25,8 +25,11 @@ local DeviceFinder = require(ReplicatedStorage.Common.DeviceFinder)
 
 local DeviceValue = Value(DeviceFinder.getDevice())
 local new = Value(`Viewport Size: {Camera.ViewportSize.X}, {Camera.ViewportSize.Y}`)
-local TextBoxText = Value()
-local gyro = Value("NOT ENABLED")
+local FPS = Value("")
+
+local FormatedFPS = Computed(function()
+	return `FPS {FPS:get()}`
+end)
 
 New("ScreenGui")({
 	Parent = player.PlayerGui,
@@ -54,9 +57,36 @@ New("ScreenGui")({
 			Text = DeviceValue,
 			TextScaled = true,
 		}),
+		New("TextLabel")({
+			Size = UDim2.fromScale(0.13, 0.0463),
+			Text = FormatedFPS,
+			TextScaled = true,
+		}),
 
 	},
 })
+
+-- FPS STUFF
+task.spawn(function()
+	local RunService = game:GetService("RunService")
+local TimeFunction = RunService:IsRunning() and time or os.clock
+
+local LastIteration, Start
+local FrameUpdateTable = {}
+
+local function HeartbeatUpdate()
+	LastIteration = TimeFunction()
+	for Index = #FrameUpdateTable, 1, -1 do
+		FrameUpdateTable[Index + 1] = FrameUpdateTable[Index] >= LastIteration - 1 and FrameUpdateTable[Index] or nil
+	end
+
+	FrameUpdateTable[1] = LastIteration
+	FPS:set(tostring(math.floor(TimeFunction() - Start >= 1 and #FrameUpdateTable or #FrameUpdateTable / (TimeFunction() - Start))))
+end
+
+Start = TimeFunction()
+RunService.Heartbeat:Connect(HeartbeatUpdate)
+end)
 
 UserInputService.InputBegan:Connect(function()
 	DeviceValue:set(DeviceFinder.getDevice())
